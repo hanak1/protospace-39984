@@ -1,6 +1,11 @@
 class PrototypesController < ApplicationController
-  before_action :authenticate_user!, only: [:new, :create, :edit, :update, :destroy]
-  before_action :move_to_toppage, except: [:index, :show]
+  before_action :authenticate_user!, except: [:index, :show]
+  # ログインしていなくても見れる
+  before_action :set_prototype, except: [:index, :new, :create]
+  # ログインしていない状態でも遷移できるページ
+  before_action :contributor_confirmation, only: [:edit, :update, :destroy]
+  # ログインしていなかったら入れない
+
   def index
     @prototypes = Prototype.all
   end
@@ -48,9 +53,13 @@ class PrototypesController < ApplicationController
      params.require(:prototype).permit(:title, :catch_copy, :concept, :image).merge(user_id: current_user.id)
    end
 
-   def move_to_toppage
-      unless user_signed_in?
-        redirect_to action: :index
-      end
+   def set_prototype
+    @prototype = Prototype.find(params[:id])
+   end
+
+   def contributor_confirmation
+      redirect_to root_path unless user_signed_in?
+      # redirect_to root_path unless current_user == @prototype.user
+
     end
 end
